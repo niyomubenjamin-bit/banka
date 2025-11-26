@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banka - Sign In to Your Account</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://i.icomoon.io/public/temp/d2265b8174/Banka/style.css">
+</head>
+<body>
+    <header id="global-header">
+        <div class="container">
+            <div class="header-container">
+                <a href="index.html" id="logo">
+                    <img src="images/logo.png" alt="Banka Logo">
+                </a>
+                <nav class="desktop-nav">
+                    <a href="features.html">Features</a>
+                    <a href="how-it-works.html">How it Works</a>
+                    <a href="about.html">About Us</a>
+                    <a href="contact.html">Contact Us</a>
+                    <a href="signup.html" class="button button-secondary">Open Account</a>
+                </nav>
+                <button id="mobile-menu-button">
+                    <!-- Burger Icon will be added via CSS -->
+                </button>
+            </div>
+            <nav id="mobile-menu">
+                <a href="features.html">Features</a>
+                <a href="how-it-works.html">How it Works</a>
+                <a href="about.html">About Us</a>
+                <a href="contact.html">Contact Us</a>
+                <a href="signup.html" class="button button-secondary">Open Account</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="signin-section" style="padding: 5rem 0; background: linear-gradient(to bottom right, var(--light-background-color), white);">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to access your secure Banka dashboard.</p>
+                </div>
+                <div style="max-width: 500px; margin: 0 auto; background: white; padding: 3rem; border-radius: 0.75rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <form id="signin-form" onsubmit="handleLogin(event)">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--dark-text-color);">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="you@example.com" required style="width: 100%; padding: 1rem; border: 1px solid var(--light-border-color); border-radius: 4px; font-size: 1rem;">
+                        </div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label for="password" style="font-weight: bold; color: var(--dark-text-color);">Password</label>
+                            </div>
+                            <input type="password" id="password" name="password" placeholder="••••••••" required style="width: 100%; padding: 1rem; border: 1px solid var(--light-border-color); border-radius: 4px; font-size: 1rem;">
+                        </div>
+
+                        <button type="submit" class="button button-primary" id="signin-button" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Sign In</button>
+                    </form>
+                    <!-- OTP Verification Form -->
+                    <form id="otp-form" onsubmit="handleLoginOtpVerification(event)" style="display: none;">
+                        <input type="hidden" id="otp-email-hidden" name="email">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="otp" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--dark-text-color);">Enter OTP</label>
+                            <input type="text" id="otp" name="otp" placeholder="••••••" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" required style="width: 100%; padding: 1rem; border: 1px solid var(--light-border-color); border-radius: 4px; font-size: 1rem;">
+                            <p style="font-size: 0.85rem; color: var(--gray-text-color); margin-top: 0.5rem;">A One-Time Password has been sent to your email.</p>
+                            <button type="button" id="resend-otp-button" class="button button-link" style="margin-top: 0.5rem; font-size: 0.9rem;">Resend OTP</button>
+                        </div>
+                        <button type="submit" class="button button-secondary" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-top: 1.5rem;">Verify OTP</button>
+                    </form>
+                    <p style="text-align: center; margin-top: 2rem; color: var(--gray-text-color);">Don't have an account? <a href="signup.html">Sign Up Now</a></p>
+                    <p style="text-align: center; margin-top: 1rem;"><a href="forgot-password.html" style="font-size: 0.9rem;">Forgot Password?</a></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="global-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <img src="images/logo.png" alt="Banka Logo" style="height: 2.5rem; margin-bottom: 1rem;">
+                    <p>Modern core banking made simple and secure. Trusted by thousands for seamless financial management.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="icon-facebook"></i></a>
+                        <a href="#"><i class="icon-twitter"></i></a>
+                        <a href="#"><i class="icon-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="how-it-works.html">How it Works</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Account Access</h3>
+                    <ul>
+                        <li><a href="signin.html">Sign In</a></li>
+                        <li><a href="signup.html">Open Account</a></li>
+                        <li><a href="dashboard.html">Client Dashboard</a></li>
+                        <li><a href="admin-dashboard.html">Staff Dashboard</a></li>
+                        <li><a href="admin-dashboard.html">Admin Console</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 Banka. All rights reserved.</p>
+                <p>Banking Made Simple &amp; Secure</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

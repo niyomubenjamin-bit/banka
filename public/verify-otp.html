@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banka - Verify OTP</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header id="global-header">
+        <div class="container">
+            <div class="header-container">
+                <a href="index.html" id="logo">
+                    <img src="images/logo.png" alt="Banka Logo">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="verify-otp-section" style="padding: 5rem 0;">
+            <div class="container">
+                <div style="max-width: 400px; margin: 0 auto; background: white; padding: 3rem; border-radius: 0.75rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h1 style="text-align: center; margin-bottom: 2rem;">Verify Your Email</h1>
+                    <p style="text-align: center; margin-bottom: 2rem;">An OTP has been sent to your email address. Please enter it below to verify your account.</p>
+                    <form id="verify-otp-form" onsubmit="handleVerifyOtp(event)">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--dark-text-color);">Email Address</label>
+                            <input type="email" id="email" name="email" required readonly style="width: 100%; padding: 1rem; border: 1px solid var(--light-border-color); border-radius: 4px; font-size: 1rem; background-color: #f1f1f1;">
+                        </div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="otp" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--dark-text-color);">OTP Code</label>
+                            <input type="text" id="otp" name="otp" placeholder="Enter 6-digit code" required style="width: 100%; padding: 1rem; border: 1px solid var(--light-border-color); border-radius: 4px; font-size: 1rem;">
+                        </div>
+                        <button type="submit" class="button button-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Verify and Sign In</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="global-footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>© 2025 Banka. All rights reserved.</p>
+                <p>Banking Made Simple &amp; Secure</p>
+            </div>
+        </div>
+    </footer>
+    <script src="js/auth.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', initOtpPage);
+    </script>
+</body>
+</html>
