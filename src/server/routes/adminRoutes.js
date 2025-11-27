@@ -15,7 +15,8 @@ router.delete('/accounts/:accountId', adminController.deleteAccount);
 
 // User lifecycle
 router.post('/users', createUserByAdmin);
-router.get('/users', adminController.getAllUsers); // New: Get all users
+// router.get('/users', adminController.getAllUsers); // Moved to userRoutes
+// router.get('/users/:userId', adminController.getUserById); // Moved to userRoutes
 router.patch('/users/:userId/activate', adminController.activateUser);
 router.patch('/users/:userId/deactivate', adminController.deactivateUser);
 router.patch('/users/:userId/verify', adminController.verifyUser);

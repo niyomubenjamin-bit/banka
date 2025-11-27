@@ -64,15 +64,27 @@ function switchAdminTab(tabName) {
     }
 }
 
-async function renderAdminOverview(contentEl) {
+async function renderAdminOverview(contentEl, startDate = '', endDate = '') {
     try {
-        const summaryData = await fetchWithAuth(`${API_BASE_URL}/api/admin/dashboard/summary`);
+        let url = `${API_BASE_URL}/api/admin/dashboard/summary`;
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const summaryData = await fetchWithAuth(url);
         const summary = summaryData.accounts;
         const transactions = summaryData.transactions;
 
         contentEl.innerHTML = `
       <div class="dashboard-header">
         <h2>Dashboard Overview</h2>
+        <div class="date-filter">
+            <input type="date" id="filter-start-date" value="${startDate}">
+            <input type="date" id="filter-end-date" value="${endDate}">
+            <button class="button button-small button-primary" onclick="applyDateFilter()">Filter</button>
+            ${startDate || endDate ? `<button class="button button-small" onclick="clearDateFilter()">Clear</button>` : ''}
+        </div>
       </div>
       
       <div class="summary-cards">
@@ -104,9 +116,21 @@ async function renderAdminOverview(contentEl) {
     }
 }
 
+function applyDateFilter() {
+    const startDate = document.getElementById('filter-start-date').value;
+    const endDate = document.getElementById('filter-end-date').value;
+    const contentEl = document.getElementById('dashboard-content');
+    renderAdminOverview(contentEl, startDate, endDate);
+}
+
+function clearDateFilter() {
+    const contentEl = document.getElementById('dashboard-content');
+    renderAdminOverview(contentEl);
+}
+
 async function renderAdminUsers(contentEl) {
     try {
-        const { users } = await fetchWithAuth(`${API_BASE_URL}/api/admin/users`);
+        const { users } = await fetchWithAuth(`${API_BASE_URL}/api/users`);
 
         let html = `
       <div class="dashboard-header">
@@ -131,7 +155,8 @@ async function renderAdminUsers(contentEl) {
               <td>${u.email}</td>
               <td><span class="role-badge ${u.role}">${u.role}</span></td>
               <td><span class="status-badge ${u.status}">${u.status}</span></td>
-              <td class="actions">
+                <td class="actions">
+                <button class="button-small" onclick="viewUser('${u.id}')">View</button>
                 ${u.role !== 'admin' || u.email !== getSession().user.email ? `
                     ${!u.email_verified ? `
                         <button class="button-small button-primary" onclick="handleUserAction('${u.id}', 'verify')">Verify</button>
@@ -182,6 +207,7 @@ async function renderAdminAccounts(contentEl) {
               <td>RWF ${Number(a.balance).toLocaleString()}</td>
               <td><span class="status-badge ${a.status}">${a.status}</span></td>
               <td class="actions">
+                <button class="button-small" onclick="viewAccount('${a.id}')">View</button>
                 <button class="button-small ${a.status === 'active' ? 'button-warning' : 'button-success'}"
                         onclick="handleAccountAction('${a.id}', '${a.status === 'active' ? 'deactivate' : 'activate'}')">
                   ${a.status === 'active' ? 'Deactivate' : 'Activate'}
@@ -265,6 +291,54 @@ async function handleAccountAction(accountId, action) {
     } catch (error) {
         console.error(`Failed to ${action} account:`, error);
         alert(`Error: ${error.message}`);
+    }
+}
+
+async function viewUser(userId) {
+    const modal = document.getElementById('user-details-modal');
+    const content = document.getElementById('user-details-content');
+    content.innerHTML = '<p>Loading...</p>';
+    openModal('user-details-modal');
+
+    try {
+        const { user } = await fetchWithAuth(`${API_BASE_URL}/api/users/${userId}`);
+        content.innerHTML = `
+            <div class="details-view">
+                <p><strong>Name:</strong> ${user.first_name} ${user.last_name}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Role:</strong> <span class="role-badge ${user.role}">${user.role}</span></p>
+                <p><strong>Status:</strong> <span class="status-badge ${user.status}">${user.status}</span></p>
+                <p><strong>Email Verified:</strong> ${user.email_verified ? 'Yes' : 'No'}</p>
+                <p><strong>Joined:</strong> ${new Date(user.created_at).toLocaleDateString()}</p>
+                <p><strong>User ID:</strong> ${user.id}</p>
+            </div>
+        `;
+    } catch (error) {
+        content.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+    }
+}
+
+async function viewAccount(accountId) {
+    const modal = document.getElementById('account-details-modal');
+    const content = document.getElementById('account-details-content');
+    content.innerHTML = '<p>Loading...</p>';
+    openModal('account-details-modal');
+
+    try {
+        const { account } = await fetchWithAuth(`${API_BASE_URL}/api/accounts/${accountId}`);
+        content.innerHTML = `
+            <div class="details-view">
+                <p><strong>Account Number:</strong> ${account.account_number}</p>
+                <p><strong>Owner:</strong> ${account.owner_first_name} ${account.owner_last_name} (${account.owner_email})</p>
+                <p><strong>Type:</strong> ${account.type}</p>
+                <p><strong>Balance:</strong> RWF ${Number(account.balance).toLocaleString()}</p>
+                <p><strong>Status:</strong> <span class="status-badge ${account.status}">${account.status}</span></p>
+                <p><strong>Created:</strong> ${new Date(account.created_at).toLocaleDateString()}</p>
+                <p><strong>Account ID:</strong> ${account.id}</p>
+            </div>
+        `;
+    } catch (error) {
+        content.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
     }
 }
 

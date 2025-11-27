@@ -45,6 +45,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api', require('./routes/contactRoutes'));
 
 app.get('/api/health', (req, res) => {

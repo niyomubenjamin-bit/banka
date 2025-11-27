@@ -225,19 +225,7 @@ async function getDashboardSummary(req, res) {
 }
 
 
-async function getAllUsers(req, res) {
-  try {
-    const { rows } = await query(
-      `SELECT id, email, first_name, last_name, role, status, email_verified, created_at
-       FROM users
-       ORDER BY created_at DESC`,
-    );
-    return res.status(200).json({ users: rows });
-  } catch (err) {
-    console.error('Error in getAllUsers handler', err);
-    return res.status(500).json({ message: 'Internal server error' });
-  }
-}
+
 
 module.exports = {
   activateAccount,
@@ -248,5 +236,4 @@ module.exports = {
   deleteUser,
   verifyUser,
   getDashboardSummary,
-  getAllUsers, // Export the new function
 };
