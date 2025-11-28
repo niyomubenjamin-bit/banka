@@ -9,6 +9,8 @@ Banka is a lightweight core banking web application that allows users to create 
 - **Create Account**: Open new bank accounts.
 - **Transaction History**: View full history of deposits and withdrawals.
 - **Transaction Details**: Inspect details of specific transactions.
+- **Low Balance Alerts**: Receive email notifications when account balance drops below a threshold.
+- **Transaction Alerts**: Receive email notifications for credit and debit transactions.
 
 ### Staff (Cashier)
 - **Credit/Debit Accounts**: Perform deposit and withdrawal transactions for user accounts.
