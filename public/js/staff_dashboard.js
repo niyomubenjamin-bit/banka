@@ -13,7 +13,13 @@ async function fetchWithAuth(url, options = {}) {
         ...options.headers,
     };
 
-    const response = await fetch(url, { ...options, headers });
+    // Cache busting for GET requests
+    if (options.method === 'GET' || !options.method) {
+        const separator = url.includes('?') ? '&' : '?';
+        url = `${url}${separator}_t=${Date.now()}`;
+    }
+
+    const response = await fetch(url, { ...options, headers, cache: 'no-store' });
 
     if (response.status === 401) {
         clearSession();
@@ -40,8 +46,8 @@ function initStaffDashboard() {
 
     document.getElementById('staff-name').textContent = `${session.user.first_name} ${session.user.last_name}`;
 
-    // Default to accounts view
-    switchStaffTab('accounts');
+    // Default to overview view
+    switchStaffTab('overview');
 }
 
 function switchStaffTab(tab) {
@@ -55,11 +61,43 @@ function switchStaffTab(tab) {
 
     const contentEl = document.getElementById('dashboard-content');
 
-    if (tab === 'accounts') {
+    if (tab === 'overview') {
+        renderStaffOverview(contentEl);
+    } else if (tab === 'accounts') {
         renderStaffAccounts(contentEl);
     } else if (tab === 'users') {
         renderStaffUsers(contentEl);
     }
+}
+
+function renderStaffOverview(contentEl) {
+    const session = getSession();
+    const user = session ? session.user : { first_name: 'Staff' };
+
+    contentEl.innerHTML = `
+        <div class="dashboard-header">
+            <h2>Welcome, ${user.first_name}!</h2>
+            <p>Here is a quick overview of your dashboard.</p>
+        </div>
+        
+        <div class="overview-cards">
+            <div class="card" onclick="switchStaffTab('accounts')" style="cursor: pointer;">
+                <div class="icon-container" style="background-color: var(--primary-color); color: white; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 1rem;">
+                    <i class="fas fa-wallet fa-lg"></i>
+                </div>
+                <h3>Manage Accounts</h3>
+                <p>View, credit, or debit client accounts.</p>
+            </div>
+            
+            <div class="card" onclick="switchStaffTab('users')" style="cursor: pointer;">
+                <div class="icon-container" style="background-color: var(--accent-color); color: white; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 1rem;">
+                    <i class="fas fa-users fa-lg"></i>
+                </div>
+                <h3>View Users</h3>
+                <p>Browse the list of all registered users.</p>
+            </div>
+        </div>
+    `;
 }
 
 async function renderStaffAccounts(contentEl) {
@@ -77,25 +115,26 @@ async function renderStaffAccounts(contentEl) {
         if (!accounts || accounts.length === 0) {
             html += '<p>No bank accounts found in the system.</p>';
         } else {
-            html += '<table class="accounts-table-full">';
+            html += '<div class="table-responsive">';
+            html += '<table class="data-table">';
             html += '<thead><tr><th>Account #</th><th>Owner</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>';
             html += '<tbody>';
             accounts.forEach(account => {
                 html += `
           <tr>
             <td>${account.account_number}</td>
-            <td>${account.owner_first_name} ${account.owner_last_name} (${account.owner_email})</td>
-            <td>RWF ${Number(account.balance).toLocaleString()}</td>
+            <td>${account.owner_first_name} ${account.owner_last_name} <br><small class="text-muted">${account.owner_email}</small></td>
+            <td class="font-weight-bold">RWF ${Number(account.balance).toLocaleString()}</td>
             <td><span class="status-badge ${account.status}">${account.status}</span></td>
             <td class="actions">
-              <button class="button-small" onclick="viewAccount('${account.id}')">View</button>
-              <button class="button-small" onclick="showTransactionForm('${account.id}', 'credit')">Credit</button>
-              <button class="button-small button-danger" onclick="showTransactionForm('${account.id}', 'debit')">Debit</button>
+              <button class="button-small" onclick="viewAccount('${account.id}')"><i class="fas fa-eye"></i> View</button>
+              <button class="button-small" onclick="showTransactionForm('${account.id}', 'credit')"><i class="fas fa-plus-circle"></i> Credit</button>
+              <button class="button-small button-danger" onclick="showTransactionForm('${account.id}', 'debit')"><i class="fas fa-minus-circle"></i> Debit</button>
             </td>
           </tr>
         `;
             });
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
         }
 
         html += `<div id="staff-action-details" style="margin-top: 2rem;"></div>`;
@@ -122,7 +161,8 @@ async function renderStaffUsers(contentEl) {
         if (!users || users.length === 0) {
             html += '<p>No users found in the system.</p>';
         } else {
-            html += '<table class="users-table">';
+            html += '<div class="table-responsive">';
+            html += '<table class="data-table">';
             html += '<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>';
             html += '<tbody>';
             users.forEach(user => {
@@ -138,7 +178,7 @@ async function renderStaffUsers(contentEl) {
           </tr>
         `;
             });
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
         }
 
         contentEl.innerHTML = html;
@@ -156,8 +196,25 @@ async function viewAccount(accountId) {
     openModal('account-details-modal');
 
     try {
-        const { account } = await fetchWithAuth(`${API_BASE_URL}/api/accounts/${accountId}`);
-        content.innerHTML = `
+        const [accountRes, transactionsRes] = await Promise.all([
+            fetchWithAuth(`${API_BASE_URL}/api/accounts/${accountId}`),
+            fetchWithAuth(`${API_BASE_URL}/api/accounts/${accountId}/transactions`)
+        ]);
+
+        const { account } = accountRes;
+        const { transactions } = transactionsRes;
+
+        // Ensure UI consistency: Sync account balance with the latest transaction
+        if (transactions && transactions.length > 0) {
+            const latestTx = transactions[0]; // Transactions are ordered by created_at DESC
+            // If there is a mismatch, prefer the transaction history as it's the ledger of truth
+            if (Number(account.balance) !== Number(latestTx.new_balance)) {
+                console.warn(`Balance mismatch detected. Account: ${account.balance}, Tx: ${latestTx.new_balance}. Syncing to Tx.`);
+                account.balance = latestTx.new_balance;
+            }
+        }
+
+        let html = `
             <div class="details-view">
                 <p><strong>Account Number:</strong> ${account.account_number}</p>
                 <p><strong>Owner:</strong> ${account.owner_first_name} ${account.owner_last_name} (${account.owner_email})</p>
@@ -167,7 +224,41 @@ async function viewAccount(accountId) {
                 <p><strong>Created:</strong> ${new Date(account.created_at).toLocaleDateString()}</p>
                 <p><strong>Account ID:</strong> ${account.id}</p>
             </div>
+            <hr>
+            <h3>Transaction History</h3>
         `;
+
+        if (!transactions || transactions.length === 0) {
+            html += '<p>No transactions found for this account.</p>';
+        } else {
+            html += '<table class="transactions-table" style="width: 100%; font-size: 0.9rem;">';
+            html += '<thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>New Balance</th><th>Cashier</th></tr></thead>';
+            html += '<tbody>';
+            transactions.forEach(tx => {
+                let cashierDisplay = 'System';
+                if (tx.cashier_id) {
+                    if (tx.cashier_first_name && tx.cashier_last_name) {
+                        cashierDisplay = `${tx.cashier_first_name} ${tx.cashier_last_name}`;
+                    } else {
+                        cashierDisplay = 'Staff';
+                    }
+                }
+
+                html += `
+                    <tr>
+                        <td>${new Date(tx.created_at).toLocaleDateString()}</td>
+                        <td>${tx.type}</td>
+                        <td>${Number(tx.amount).toLocaleString()}</td>
+                        <td>${Number(tx.new_balance).toLocaleString()}</td>
+                        <td>${cashierDisplay}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table>';
+        }
+
+        content.innerHTML = html;
+
     } catch (error) {
         content.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
     }

@@ -13,7 +13,7 @@ const pool = new Pool({
 
 async function createAdmin() {
   const admin = {
-    email: 'niyomubenjamin@gmail.com',
+    email: 'niyomubenjamin@gmail.com', //
     password: 'adminpassword', // Please change this
     firstName: 'Admin',
     lastName: 'User',

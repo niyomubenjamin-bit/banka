@@ -32,6 +32,10 @@ function getSession() {
 function clearSession() {
   localStorage.removeItem('banka-token');
   localStorage.removeItem('banka-user');
+  localStorage.removeItem('banka-verify-email');
+  localStorage.removeItem('alert_low_balance');
+  localStorage.removeItem('alert_transaction');
+  sessionStorage.clear();
 }
 
 function isLoggedIn() {

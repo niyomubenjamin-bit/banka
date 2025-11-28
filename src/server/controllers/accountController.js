@@ -108,17 +108,20 @@ async function getAccountTransactions(req, res) {
 
     const account = accountRows[0];
 
-    if (account.owner_id !== user.id) {
+    // Allow owner, staff, or admin to view transactions
+    if (account.owner_id !== user.id && !['staff', 'admin'].includes(user.role)) {
       return res.status(403).json({
         message: 'You are not allowed to view transactions for this account',
       });
     }
 
     const { rows } = await query(
-      `SELECT id, account_id, type, amount, cashier_id, old_balance, new_balance, description, created_at
-       FROM transactions
-       WHERE account_id = $1
-       ORDER BY created_at DESC`,
+      `SELECT t.id, t.account_id, t.type, t.amount, t.cashier_id, t.old_balance, t.new_balance, t.description, t.created_at,
+              u.first_name as cashier_first_name, u.last_name as cashier_last_name
+       FROM transactions t
+       LEFT JOIN users u ON t.cashier_id = u.id
+       WHERE t.account_id = $1
+       ORDER BY t.created_at DESC`,
       [accountId],
     );
 
@@ -453,4 +456,5 @@ module.exports = {
   creditAccount,
   getAllAccounts,
   getAccountById,
+  _createAccountInternal,
 };

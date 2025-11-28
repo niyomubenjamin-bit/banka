@@ -177,7 +177,7 @@ async function renderClientAccounts(contentEl) {
                             <div class="balance-label">Available Balance</div>
                             <div class="balance-amount">RWF ${Number(account.balance).toLocaleString()}</div>
                         </div>
-                        <span class="account-number">**** ${account.account_number.slice(-4)}</span>
+                        <span class="account-number">Account number : ${account.account_number}</span>
                         
                         <div class="card-actions">
                             <button class="button button-outline btn-block" onclick="toggleTransactions('${account.id}')">
@@ -352,29 +352,103 @@ function toggleSetting(key, value) {
 
 function renderSupport(contentEl) {
   contentEl.innerHTML = `
-        <div class="support-section">
-            <h3>Contact Support</h3>
-            <p>We are here to help 24/7.</p>
+        <div class="support-container">
+            <div class="support-header">
+                <h2>Contact Support</h2>
+                <p>We're here to help! Send us a message and we'll get back to you as soon as possible.</p>
+            </div>
             
-            <form onsubmit="handleSupportSubmit(event)">
-                <div class="form-group">
-                    <label>Subject</label>
-                    <input type="text" name="subject" required placeholder="How can we help?">
+            <div class="support-content">
+                <div class="support-info">
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>Email Us</h4>
+                            <p>niyomubenjamin@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h4>Call Us</h4>
+                            <p>+250 782491807</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <h4>Working Hours</h4>
+                            <p>Mon - Fri: 8am - 6pm</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Message</label>
-                    <textarea name="message" required rows="5" placeholder="Describe your issue..."></textarea>
+
+                <div class="support-form-card">
+                    <form onsubmit="handleSupportSubmit(event)" id="support-form">
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select name="subject" required class="form-select">
+                                <option value="" disabled selected>Select a topic</option>
+                                <option value="General Inquiry">General Inquiry</option>
+                                <option value="Technical Issue">Technical Issue</option>
+                                <option value="Account Problem">Account Problem</option>
+                                <option value="Feedback">Feedback</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea name="message" required rows="6" placeholder="Please describe your issue in detail..."></textarea>
+                        </div>
+                        <button type="submit" class="button button-primary btn-block" id="support-submit-btn">
+                            <span>Send Message</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
                 </div>
-                <button type="submit" class="button button-primary">Send Message</button>
-            </form>
+            </div>
         </div>
     `;
 }
 
-function handleSupportSubmit(event) {
+async function handleSupportSubmit(event) {
   event.preventDefault();
-  alert('Thank you! Your message has been sent to our support team.');
-  event.target.reset();
+
+  const form = event.target;
+  const btn = document.getElementById('support-submit-btn');
+  const originalBtnContent = btn.innerHTML;
+
+  // Set loading state
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+  const subject = form.subject.value;
+  const message = form.message.value;
+  const { user } = getSession();
+
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/contact`, {
+      method: 'POST',
+      body: JSON.stringify({
+        name: `${user.first_name} ${user.last_name}`,
+        email: user.email,
+        subject,
+        message
+      }),
+    });
+
+    if (response) {
+      // Show success message (could be improved with a toast/modal, but alert is okay for now)
+      alert('Message sent successfully! We will contact you shortly.');
+      form.reset();
+    }
+  } catch (err) {
+    console.error('Error sending support message:', err);
+    alert('Failed to send message. Please try again later.');
+  } finally {
+    // Reset button state
+    btn.disabled = false;
+    btn.innerHTML = originalBtnContent;
+  }
 }
 
 async function showTransactionDetails(accountId, transactionId) {

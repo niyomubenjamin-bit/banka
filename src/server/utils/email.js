@@ -33,60 +33,24 @@ async function sendOtpEmail(to, subject, text) {
   });
 }
 
-async function sendContactEmail(name, from, subject, message) {
-
+async function sendContactEmail(name, userEmail, subject, message) {
   if (!transporter) {
-
-    console.log('[DEV EMAIL]', { name, from, subject, message });
-
+    console.log('[DEV EMAIL]', { name, userEmail, subject, message });
     return;
-
   }
 
-
-
   try {
-
-
-
-      await transporter.sendMail({
-
-
-
-        from,
-
-
-
-        to: EMAIL_USER,
-
-
-
-        subject: `Contact Form: ${subject}`,
-
-
-
-        text: `Name: ${name}\nEmail: ${from}\n\nMessage:\n${message}`,
-
-
-
-      });
-
-
-
-    } catch (error) {
-
-
-
-      console.error('Error sending contact email:', error);
-
-
-
-      throw error;
-
-
-
-    }
-
+    await transporter.sendMail({
+      from: EMAIL_USER, // Send from our authenticated address
+      replyTo: userEmail, // Allow replying to the user
+      to: EMAIL_USER, // Send to support (ourselves)
+      subject: `Contact Form: ${subject}`,
+      text: `Name: ${name}\nEmail: ${userEmail}\n\nMessage:\n${message}`,
+    });
+  } catch (error) {
+    console.error('Error sending contact email:', error);
+    throw error;
+  }
 }
 
 

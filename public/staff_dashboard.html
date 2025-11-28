@@ -10,7 +10,64 @@
 </head>
 
 <body>
-    </nav>
+    <div id="app">
+        <nav class="dashboard-navbar">
+            <div class="navbar-content">
+                <div class="navbar-brand">
+                    <i class="fas fa-id-card-alt"></i> Banka Staff
+                </div>
+                <div class="navbar-links">
+                    <a class="nav-link active" onclick="switchStaffTab('overview')">Overview</a>
+                    <a class="nav-link" onclick="switchStaffTab('users')">Users</a>
+                    <a class="nav-link" onclick="switchStaffTab('accounts')">Accounts</a>
+                </div>
+                <div class="navbar-user">
+                    <span class="user-name" id="staff-name">Staff</span>
+                    <span class="logout-btn" onclick="handleLogout()">Logout</span>
+                </div>
+            </div>
+        </nav>
 
+        <div class="dashboard-container">
+            <div id="dashboard-content">
+                <!-- Content will be loaded here -->
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="user-details-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>User Details</h3>
+                <span class="close-button" onclick="closeModal('user-details-modal')">&times;</span>
+            </div>
+            <div class="modal-body" id="user-details-content">
+                <!-- Content injected by JS -->
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="account-details-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Account Details</h3>
+                <span class="close-button" onclick="closeModal('account-details-modal')">&times;</span>
+            </div>
+            <div class="modal-body" id="account-details-content">
+                <!-- Content injected by JS -->
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/staff_dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', initStaffDashboard);
+    </script>
+</body>
 
 </html>
