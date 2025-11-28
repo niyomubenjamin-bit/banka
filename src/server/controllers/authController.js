@@ -15,6 +15,7 @@ const SAFE_USER_FIELDS = [
   'role',
   'email_verified',
   'status',
+  'settings',
   'created_at',
   'updated_at',
 ];
@@ -392,7 +393,7 @@ async function getCurrentUserProfile(req, res) {
     }
 
     const { rows } = await query(
-      `SELECT id, email, first_name, last_name, role, email_verified, status, created_at, updated_at
+      `SELECT id, email, first_name, last_name, role, email_verified, status, settings, created_at, updated_at
        FROM users WHERE id = $1`,
       [userId],
     );
@@ -416,11 +417,11 @@ async function updateCurrentUserProfile(req, res) {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const { firstName, lastName } = req.body || {};
+    const { firstName, lastName, settings } = req.body || {};
 
-    if (!firstName && !lastName) {
+    if (!firstName && !lastName && !settings) {
       return res.status(400).json({
-        message: 'At least one of firstName or lastName is required',
+        message: 'At least one of firstName, lastName, or settings is required',
       });
     }
 
@@ -440,13 +441,19 @@ async function updateCurrentUserProfile(req, res) {
       idx += 1;
     }
 
+    if (settings) {
+      fields.push(`settings = $${idx}`);
+      params.push(settings);
+      idx += 1;
+    }
+
     fields.push(`updated_at = NOW()`);
 
     const sql = `
       UPDATE users
          SET ${fields.join(', ')}
        WHERE id = $${idx}
-       RETURNING id, email, first_name, last_name, role, email_verified, status, created_at, updated_at
+       RETURNING id, email, first_name, last_name, role, email_verified, status, settings, created_at, updated_at
     `;
     params.push(userId);
 
@@ -459,7 +466,7 @@ async function updateCurrentUserProfile(req, res) {
     const user = toSafeUser(rows[0]);
     return res.status(200).json({ user });
   } catch (err) {
-    console.error('Error in updateCurrentUserProfile handler', err);
+    console.error('Error in updateCurrentUserProfile handler', JSON.stringify(err, Object.getOwnPropertyNames(err)));
     return res.status(500).json({ message: 'Internal server error' });
   }
 }

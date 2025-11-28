@@ -324,8 +324,11 @@ async function renderAnalytics(contentEl) {
 }
 
 function renderSettings(contentEl) {
-  const lowBalance = localStorage.getItem('alert_low_balance') === 'true';
-  const txAlert = localStorage.getItem('alert_transaction') === 'true';
+  const { user } = getSession();
+  const settings = user.settings || {};
+
+  const lowBalance = settings.alert_low_balance === true;
+  const txAlert = settings.alert_transaction === true;
 
   contentEl.innerHTML = `
         <div class="settings-section">
@@ -345,9 +348,36 @@ function renderSettings(contentEl) {
     `;
 }
 
-function toggleSetting(key, value) {
-  localStorage.setItem(key, value);
-  console.log(`Setting ${key} changed to ${value}`);
+async function toggleSetting(key, value) {
+  const { user } = getSession();
+  const currentSettings = user.settings || {};
+
+  const newSettings = {
+    ...currentSettings,
+    [key]: value
+  };
+
+  try {
+    const { user: updatedUser } = await fetchWithAuth(`${API_BASE_URL}/api/auth/me`, {
+      method: 'PATCH',
+      body: JSON.stringify({ settings: newSettings }),
+    });
+
+    if (updatedUser) {
+      // Update session with new user data
+      const session = getSession();
+      session.user = updatedUser;
+      localStorage.setItem('banka_session', JSON.stringify(session));
+      console.log(`Setting ${key} updated to ${value}`);
+    }
+  } catch (err) {
+    console.error('Failed to update settings:', err);
+    alert('Failed to save setting. Please try again.');
+    // Revert checkbox state visually if needed, but for now simple alert is enough
+    // Ideally we would re-render the settings to sync with server state
+    const contentEl = document.getElementById('dashboard-content');
+    if (contentEl) renderSettings(contentEl);
+  }
 }
 
 function renderSupport(contentEl) {

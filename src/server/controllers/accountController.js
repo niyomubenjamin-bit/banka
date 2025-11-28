@@ -1,4 +1,5 @@
 const { query, pool } = require('../config/db');
+const { sendTransactionAlert, sendLowBalanceAlert } = require('../utils/email');
 
 function requireAuthUser(req, res) {
   if (!req.user || !req.user.id) {
@@ -307,6 +308,32 @@ async function debitAccount(req, res) {
 
     await client.query('COMMIT');
 
+    // Send alerts asynchronously (don't block response)
+    (async () => {
+      try {
+        const { rows: userRows } = await query('SELECT email, first_name, settings FROM users WHERE id = $1', [account.owner_id]);
+        if (userRows.length > 0) {
+          const user = userRows[0];
+          const settings = user.settings || {};
+
+          // Transaction Alert
+          if (settings.alert_transaction) {
+            await sendTransactionAlert(user, txRows[0], { ...account, balance: newBalance });
+          }
+
+          // Low Balance Alert (if balance < 5000 and it wasn't before, or just check current balance)
+          // Simple check: if balance < 5000 and alerts enabled
+          if (settings.alert_low_balance && newBalance < 5000) {
+            // Optional: Check if it was already low to avoid spamming? 
+            // For now, simple check is fine as per requirements.
+            await sendLowBalanceAlert(user, { ...account, balance: newBalance });
+          }
+        }
+      } catch (alertErr) {
+        console.error('Failed to send alerts:', alertErr);
+      }
+    })();
+
     return res.status(200).json({
       account: { ...account, balance: newBalance },
       transaction: txRows[0],
@@ -371,6 +398,23 @@ async function creditAccount(req, res) {
     );
 
     await client.query('COMMIT');
+
+    // Send alerts asynchronously
+    (async () => {
+      try {
+        const { rows: userRows } = await query('SELECT email, first_name, settings FROM users WHERE id = $1', [account.owner_id]);
+        if (userRows.length > 0) {
+          const user = userRows[0];
+          const settings = user.settings || {};
+
+          if (settings.alert_transaction) {
+            await sendTransactionAlert(user, txRows[0], { ...account, balance: newBalance });
+          }
+        }
+      } catch (alertErr) {
+        console.error('Failed to send alerts:', alertErr);
+      }
+    })();
 
     return res.status(200).json({
       account: { ...account, balance: newBalance },

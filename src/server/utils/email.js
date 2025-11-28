@@ -61,4 +61,32 @@ module.exports = {
 
   sendContactEmail,
 
+  sendTransactionAlert: async (user, transaction, account) => {
+    const subject = `Banka Alert: ${transaction.type === 'credit' ? 'Credit' : 'Debit'} Transaction`;
+    const text = `Dear ${user.first_name},
+
+A ${transaction.type} transaction of RWF ${Number(transaction.amount).toLocaleString()} has occurred on your account ${account.account_number}.
+
+Description: ${transaction.description || 'N/A'}
+New Balance: RWF ${Number(transaction.new_balance).toLocaleString()}
+
+Date: ${new Date(transaction.created_at).toLocaleString()}
+
+Thank you for banking with us.`;
+    await sendOtpEmail(user.email, subject, text);
+  },
+
+  sendLowBalanceAlert: async (user, account) => {
+    const subject = 'Banka Alert: Low Balance Warning';
+    const text = `Dear ${user.first_name},
+
+Your account ${account.account_number} balance has dropped below RWF 5,000.
+Current Balance: RWF ${Number(account.balance).toLocaleString()}
+
+Please top up your account to avoid service interruptions.
+
+Thank you for banking with us.`;
+    await sendOtpEmail(user.email, subject, text);
+  },
+
 };
